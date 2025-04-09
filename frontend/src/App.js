@@ -5,6 +5,8 @@ import Register from "./Components/UserManagement/Registration";
 import  Login from "./Components/UserManagement/Login";
 import Profile from "./Components/UserManagement/UserProfile";
 import RecipeAdd from "./Components/RecipeManagement/RecipeAdd";
+import CookingPlan from "./Components/CookingPlan/CookingPlan"
+import CreatePlan from "./Components/CookingPlan/CreatePlan"
 
 function App() {
   return (
@@ -16,6 +18,8 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/addrecipe" element={<RecipeAdd />} />
+          <Route path="/cooking-plan" element={<CookingPlan />} />
+          <Route path="/create-plan" element={<CreatePlan />} />
         </Routes>
       </React.Fragment>
     </div>

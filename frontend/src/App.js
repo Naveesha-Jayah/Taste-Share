@@ -9,6 +9,7 @@ import CookingPlan from "./Components/CookingPlan/CookingPlan"
 import CreatePlan from "./Components/CookingPlan/CreatePlan"
 import UserLogin from "./Components/UserM/UserLogin"
 import UserRegistration from "./Components/UserM/UserRegistration"
+import UserProfile from "./Components/UserM/UserProfile"
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
           <Route path="/create-plan" element={<CreatePlan />} />
           <Route path="/user-login" element={<UserLogin />} />
           <Route path="/user-register" element={<UserRegistration />} />
+          <Route path="/user-profile" element={<UserProfile />} />
 
         </Routes>
       </React.Fragment>

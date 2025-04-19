@@ -1,286 +1,219 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import './RecipeAdd.css';
 
-const CreateRecipe = () => {
+const RecipeForm = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [isEdit, setIsEdit] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState('');
+  
   const [recipe, setRecipe] = useState({
     title: '',
     description: '',
-    media: [],
-    prepTime: '',
-    cookTime: '',
-    savings: '',
-    difficulty: 'MEDIUM',
-    ingredients: [{ amount: '', name: '' }],
-    instructions: ['']
+    prepTime: 0,
+    cookTime: 0,
+    difficulty: 'Easy',
+    ingredients: '',
+    instructions: '',
+    recipeImage: ''
   });
-  const [mediaFiles, setMediaFiles] = useState([]);
-  const navigate = useNavigate();
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setRecipe({ ...recipe, [name]: value });
-  };
-
-  const handleIngredientChange = (index, e) => {
-    const { name, value } = e.target;
-    const ingredients = [...recipe.ingredients];
-    ingredients[index][name] = value;
-    setRecipe({ ...recipe, ingredients });
-  };
-
-  const handleInstructionChange = (index, e) => {
-    const instructions = [...recipe.instructions];
-    instructions[index] = e.target.value;
-    setRecipe({ ...recipe, instructions });
-  };
-
-  const addIngredient = () => {
-    setRecipe({
-      ...recipe,
-      ingredients: [...recipe.ingredients, { amount: '', name: '' }]
-    });
-  };
-
-  const removeIngredient = (index) => {
-    const ingredients = [...recipe.ingredients];
-    ingredients.splice(index, 1);
-    setRecipe({ ...recipe, ingredients });
-  };
-
-  const addInstruction = () => {
-    setRecipe({
-      ...recipe,
-      instructions: [...recipe.instructions, '']
-    });
-  };
-
-  const removeInstruction = (index) => {
-    const instructions = [...recipe.instructions];
-    instructions.splice(index, 1);
-    setRecipe({ ...recipe, instructions });
-  };
-
-  const handleMediaUpload = (e) => {
-    if (e.target.files.length + mediaFiles.length > 3) {
-      alert('Maximum 3 media files allowed');
-      return;
+  useEffect(() => {
+    if (id && id !== 'new') {
+      setIsEdit(true);
+      const fetchRecipe = async () => {
+        try {
+          const response = await axios.get(`http://localhost:8081/recipes/${id}`);
+          setRecipe(response.data);
+          if (response.data.recipeImage) {
+            setImagePreview(`http://localhost:8081/uploads/${response.data.recipeImage}`);
+          }
+        } catch (error) {
+          console.error('Error fetching recipe:', error);
+        }
+      };
+      fetchRecipe();
     }
-    setMediaFiles([...mediaFiles, ...Array.from(e.target.files)]);
+  }, [id]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setRecipe(prev => ({ ...prev, [name]: value }));
   };
 
-  const removeMedia = (index) => {
-    const files = [...mediaFiles];
-    files.splice(index, 1);
-    setMediaFiles(files);
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    setImageFile(file);
+    
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     try {
-      const formData = new FormData();
-      formData.append('recipe', JSON.stringify(recipe));
+      let imageFilename = recipe.recipeImage;
       
-      mediaFiles.forEach(file => {
-        formData.append('files', file);
-      });
-
-      const response = await axios.post('http://localhost:8080/api/recipes', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-
-      navigate(`/recipes/${response.data.id}`);
+      // Upload new image if selected
+      if (imageFile) {
+        const formData = new FormData();
+        formData.append('file', imageFile);
+        const uploadResponse = await axios.post('http://localhost:8081/recipes/recipeImg', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+        imageFilename = uploadResponse.data.filename;
+      }
+      
+      const recipeData = {
+        ...recipe,
+        recipeImage: imageFilename
+      };
+      
+      if (isEdit) {
+        await axios.put(`http://localhost:8081/recipes/${id}`, recipeData);
+      } else {
+        await axios.post('http://localhost:8081/recipes', recipeData);
+      }
+      
+      navigate('/recipes');
     } catch (error) {
-      console.error('Error creating recipe:', error);
-      alert('Failed to create recipe');
+      console.error('Error saving recipe:', error);
     }
   };
 
   return (
-    <div className="create-recipe">
-      <h2>Create New Recipe</h2>
+    <div className="recipe-form">
+      <h2>{isEdit ? 'Edit Recipe' : 'Add New Recipe'}</h2>
       <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label>Recipe Title*</label>
+        <div className="mb-3">
+          <label className="form-label">Title</label>
           <input
             type="text"
+            className="form-control"
             name="title"
             value={recipe.title}
-            onChange={handleInputChange}
+            onChange={handleChange}
             required
           />
         </div>
-
-        <div className="form-group">
-          <label>Description*</label>
+        
+        <div className="mb-3">
+          <label className="form-label">Description</label>
           <textarea
+            className="form-control"
             name="description"
             value={recipe.description}
-            onChange={handleInputChange}
+            onChange={handleChange}
+            rows="3"
             required
           />
         </div>
-
-        <div className="form-group">
-          <label>Media (Image or Video)</label>
-          <div className="media-upload">
-            <label className="upload-btn">
-              Upload Image/Video
-              <input
-                type="file"
-                multiple
-                accept="image/*,video/*"
-                onChange={handleMediaUpload}
-                style={{ display: 'none' }}
-              />
-            </label>
-            <div className="media-preview">
-              {mediaFiles.map((file, index) => (
-                <div key={index} className="media-item">
-                  <span>{file.name}</span>
-                  <button type="button" onClick={() => removeMedia(index)}>Remove</button>
-                </div>
-              ))}
-            </div>
+        
+        <div className="row mb-3">
+          <div className="col-md-6">
+            <label className="form-label">Preparation Time (minutes)</label>
+            <input
+              type="number"
+              className="form-control"
+              name="prepTime"
+              value={recipe.prepTime}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div className="col-md-6">
+            <label className="form-label">Cooking Time (minutes)</label>
+            <input
+              type="number"
+              className="form-control"
+              name="cookTime"
+              value={recipe.cookTime}
+              onChange={handleChange}
+              required
+            />
           </div>
         </div>
-
-        <div className="form-section">
-          <h3>Details</h3>
-          <div className="form-row">
-            <div className="form-group">
-              <label>Prep Time (min)</label>
-              <input
-                type="number"
-                name="prepTime"
-                value={recipe.prepTime}
-                onChange={handleInputChange}
-              />
-            </div>
-            <div className="form-group">
-              <label>Cook Time (min)</label>
-              <input
-                type="number"
-                name="cookTime"
-                value={recipe.cookTime}
-                onChange={handleInputChange}
-              />
-            </div>
-            <div className="form-group">
-              <label>Savings</label>
-              <input
-                type="text"
-                name="savings"
-                value={recipe.savings}
-                onChange={handleInputChange}
-              />
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label>Difficulty</label>
-            <div className="radio-group">
-              <label>
-                <input
-                  type="radio"
-                  name="difficulty"
-                  value="EASY"
-                  checked={recipe.difficulty === 'EASY'}
-                  onChange={handleInputChange}
-                />
-                Easy
-              </label>
-              <label>
-                <input
-                  type="radio"
-                  name="difficulty"
-                  value="MEDIUM"
-                  checked={recipe.difficulty === 'MEDIUM'}
-                  onChange={handleInputChange}
-                />
-                Medium
-              </label>
-              <label>
-                <input
-                  type="radio"
-                  name="difficulty"
-                  value="HARD"
-                  checked={recipe.difficulty === 'HARD'}
-                  onChange={handleInputChange}
-                />
-                Hard
-              </label>
-            </div>
-          </div>
+        
+        <div className="mb-3">
+          <label className="form-label">Difficulty</label>
+          <select
+            className="form-select"
+            name="difficulty"
+            value={recipe.difficulty}
+            onChange={handleChange}
+            required
+          >
+            <option value="Easy">Easy</option>
+            <option value="Medium">Medium</option>
+            <option value="Hard">Hard</option>
+          </select>
         </div>
-
-        <div className="form-section">
-          <h3>Ingredients*</h3>
-          {recipe.ingredients.map((ingredient, index) => (
-            <div key={index} className="ingredient-row">
-              <input
-                type="text"
-                name="amount"
-                placeholder="Amount (e.g., 1 cup)"
-                value={ingredient.amount}
-                onChange={(e) => handleIngredientChange(index, e)}
-                required
-              />
-              <input
-                type="text"
-                name="name"
-                placeholder="Ingredient name"
-                value={ingredient.name}
-                onChange={(e) => handleIngredientChange(index, e)}
-                required
-              />
-              <button
-                type="button"
-                className="remove-btn"
-                onClick={() => removeIngredient(index)}
-              >
-                Remove
-              </button>
-            </div>
-          ))}
-          <button type="button" className="add-btn" onClick={addIngredient}>
-            + Add ingredient
-          </button>
+        
+        <div className="mb-3">
+          <label className="form-label">Ingredients (one per line)</label>
+          <textarea
+            className="form-control"
+            name="ingredients"
+            value={recipe.ingredients}
+            onChange={handleChange}
+            rows="5"
+            required
+          />
         </div>
-
-        <div className="form-section">
-          <h3>Instructions*</h3>
-          {recipe.instructions.map((instruction, index) => (
-            <div key={index} className="instruction-row">
-              <textarea
-                value={instruction}
-                onChange={(e) => handleInstructionChange(index, e)}
-                required
-              />
-              <button
-                type="button"
-                className="remove-btn"
-                onClick={() => removeInstruction(index)}
-              >
-                Remove
-              </button>
-            </div>
-          ))}
-          <button type="button" className="add-btn" onClick={addInstruction}>
-            + Add Step
-          </button>
+        
+        <div className="mb-3">
+          <label className="form-label">Instructions</label>
+          <textarea
+            className="form-control"
+            name="instructions"
+            value={recipe.instructions}
+            onChange={handleChange}
+            rows="8"
+            required
+          />
         </div>
-
-        <button type="submit" className="submit-btn">
-          Create Recipe
+        
+        <div className="mb-3">
+          <label className="form-label">Recipe Image</label>
+          <input
+            type="file"
+            className="form-control"
+            accept="image/*"
+            onChange={handleImageChange}
+          />
+          {imagePreview && (
+            <div className="mt-2">
+              <img 
+                src={imagePreview} 
+                alt="Preview" 
+                style={{ maxHeight: '200px', maxWidth: '100%' }} 
+              />
+            </div>
+          )}
+        </div>
+        
+        <button type="submit" className="btn btn-primary me-2">
+          {isEdit ? 'Update Recipe' : 'Save Recipe'}
+        </button>
+        <button 
+          type="button" 
+          className="btn btn-secondary"
+          onClick={() => navigate('/recipes')}
+        >
+          Cancel
         </button>
       </form>
     </div>
   );
 };
 
-export default CreateRecipe;
+export default RecipeForm;

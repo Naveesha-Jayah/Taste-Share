@@ -5,6 +5,8 @@ import Register from "./Components/UserManagement/Registration";
 import  Login from "./Components/UserManagement/Login";
 import Profile from "./Components/UserManagement/UserProfile";
 import RecipeAdd from "./Components/RecipeManagement/RecipeAdd";
+import Challenge from "./Components/CookingChallenges/CookingChallenge"
+import DisplayChallenges from "./Components/CookingChallenges/DisplayChallenges"
 
 function App() {
   return (
@@ -16,6 +18,8 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/addrecipe" element={<RecipeAdd />} />
+          <Route path="/challenge" element={<Challenge />} />
+          <Route path="/displayChallenges" element={<DisplayChallenges />} />
         </Routes>
       </React.Fragment>
     </div>

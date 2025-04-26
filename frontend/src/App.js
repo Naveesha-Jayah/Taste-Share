@@ -7,6 +7,7 @@ import Profile from "./Components/UserManagement/UserProfile";
 import RecipeAdd from "./Components/RecipeManagement/RecipeAdd";
 import CookingPlan from "./Components/CookingPlan/CookingPlan"
 import CreatePlan from "./Components/CookingPlan/CreatePlan"
+import CreateChallenge from "./Components/Challenges/createChallenge"
 
 
 
@@ -23,6 +24,7 @@ function App() {
           <Route path="/addrecipe" element={<RecipeAdd />} />
           <Route path="/cooking-plan" element={<CookingPlan />} />
           <Route path="/create-plan" element={<CreatePlan />} />
+          <Route path="/create-challenge" element={<CreateChallenge />} />
         </Routes>
       </React.Fragment>
     </div>

@@ -8,6 +8,9 @@ import RecipeAdd from "./Components/RecipeManagement/RecipeAdd";
 import CookingPlan from "./Components/CookingPlan/CookingPlan"
 import CreatePlan from "./Components/CookingPlan/CreatePlan"
 
+
+
+
 function App() {
   return (
     <div>
@@ -20,6 +23,9 @@ function App() {
           <Route path="/addrecipe" element={<RecipeAdd />} />
           <Route path="/cooking-plan" element={<CookingPlan />} />
           <Route path="/create-plan" element={<CreatePlan />} />
+
+
+          
         </Routes>
       </React.Fragment>
     </div>

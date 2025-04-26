@@ -23,9 +23,6 @@ function App() {
           <Route path="/addrecipe" element={<RecipeAdd />} />
           <Route path="/cooking-plan" element={<CookingPlan />} />
           <Route path="/create-plan" element={<CreatePlan />} />
-
-
-          
         </Routes>
       </React.Fragment>
     </div>
